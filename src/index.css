@@ -1,7 +1,9 @@
 @import "tailwindcss";
+/* 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-
-/* Base styles for light mode */
 body {
   font-family: 'Inter', sans-serif;
   @apply bg-gray-100 text-gray-900 leading-relaxed antialiased;
@@ -10,19 +12,16 @@ body {
   flex-direction: column;
 }
 
-/* Ensure #root and main app div fill available space */
 #root, #root > div {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
 
-/* Dark mode basic setup
 .dark {
   @apply bg-dark-background text-gray-100;
-} */
+}
 
-/* Custom Utility Classes for consistency and reusability
 @layer components {
   .btn-primary {
     @apply px-6 py-3 rounded-lg bg-primary-600 text-white font-semibold shadow-md hover:bg-primary-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-dark-card;
