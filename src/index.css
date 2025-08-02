@@ -1,8 +1,11 @@
-@import "tailwindcss";
-/* 
+/* @import "tailwindcss"; */
+
+/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
 
 body {
   font-family: 'Inter', sans-serif;
@@ -35,4 +38,4 @@ body {
   .card-container {
     @apply bg-white dark:bg-dark-card rounded-xl shadow-custom-light dark:shadow-custom-dark p-6;
   }
-} */
+}

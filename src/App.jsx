@@ -11,6 +11,7 @@ import CandidateDashboard from './pages/CandidateDashboard';
 import RecruiterDashboard from './pages/RecruiterDashboard';
 import PostJobPage from './pages/PostJobPage';
 import ManageApplicationsPage from './pages/ManageApplicationsPage';
+import Footer from './pages/Footer';
 
 function App() {
   const { loading: authLoading } = useAuth();
@@ -47,6 +48,7 @@ function App() {
           <Route path="*" element={<h1 className="text-center text-3xl font-bold mt-20 text-red-500">404: Page Not Found</h1>} />
         </Routes>
       </main>
+      <Footer/>
     </div>
   );
 }
