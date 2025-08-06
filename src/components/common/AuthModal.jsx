@@ -57,7 +57,8 @@ const AuthModal = ({ isOpen, onClose }) => {
         }
 
         if (isRecruiterPath) {
-          await signupRecruiter(email, password, {
+          // CORRECTED: Pass confirmPassword as the third argument, then companyDetails as the fourth
+          await signupRecruiter(email, password, confirmPassword, { // Pass confirmPassword here
             name: companyName,
             website: companyWebsite,
             description: companyDescription,
@@ -66,7 +67,8 @@ const AuthModal = ({ isOpen, onClose }) => {
           setSuccessMessage('Recruiter account created! Please check your email for confirmation (if enabled). Redirecting...');
           setTimeout(handleClose, 2000);
         } else {
-          await signupCandidate(email, password);
+          // CORRECTED: Pass confirmPassword as the third argument for candidate signup
+          await signupCandidate(email, password, confirmPassword); // Pass confirmPassword here
           setSuccessMessage('Candidate account created! Please check your email for confirmation (if enabled). Redirecting...');
           setTimeout(handleClose, 2000);
         }

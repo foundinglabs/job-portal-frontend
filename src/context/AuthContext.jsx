@@ -19,9 +19,9 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   useEffect(() => {
-    // Correctly get the subscription object directly
-    const { data: { subscription } } = supabase.auth.onAuthStateChange( // <-- Change here: destructure `subscription`
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth event:', event, 'Session:', session);
         if (event === 'SIGNED_IN' && session) {
           console.log('Auth event: SIGNED_IN', session.user);
           setUser(session.user);
@@ -61,6 +61,7 @@ export const AuthProvider = ({ children }) => {
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session);
       if (session) {
         setUser(session.user);
         setToken(session.access_token);
@@ -81,14 +82,12 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
-    // Cleanup: Use the `subscription` object to unsubscribe
     return () => {
-      if (subscription) { // Ensure subscription exists before unsubscribing
-        subscription.unsubscribe(); // <-- Corrected line
+      if (subscription) {
+        subscription.unsubscribe();
       }
     };
   }, [navigate]);
-
 
   const login = async (email, password) => {
     try {
@@ -117,17 +116,55 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signupCandidate = async (email, password) => {
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
-      if (authError) throw authError;
+  // Helper function to wait for user ID to be available in session
+  const waitForUserId = async (retries = 10, delay = 200) => {
+    for (let i = 0; i < retries; i++) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id && typeof session.user.id === 'string' && session.user.id.length === 36) {
+        return session.user;
+      }
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    return null; // User ID not found after retries
+  };
 
+
+  // Candidate signup function
+  const signupCandidate = async (email, password, confirmPassword) => {
+    try {
+      // 1. Sign up user with Supabase Auth
+      const { error: signUpError } = await supabase.auth.signUp({ email, password });
+      if (signUpError) throw signUpError;
+
+      // 2. Explicitly sign in the user to get a valid session and user object
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        console.warn('Explicit sign-in after candidate signup failed:', signInError.message);
+        throw signInError;
+      }
+      
+      // 3. Get the stable session and user ID from storage by waiting
+      const authUser = await waitForUserId(); // CHANGED: Use waitForUserId
+      const { data: { session: authSession } } = await supabase.auth.getSession(); // Get session after user is stable
+
+      console.log('Supabase signUp+signIn (Candidate) authUser (after wait):', authUser);
+      console.log('Supabase signUp+signIn (Candidate) authUser?.id (after wait):', authUser?.id);
+
+      // CRITICAL CHECK: Ensure user data is present and valid UUID before proceeding
+      if (!authUser || !authUser.id || typeof authUser.id !== 'string' || authUser.id.length !== 36) {
+        throw new Error("User data not available or invalid UUID after signup/signin/wait. Please ensure 'Confirm email' is OFF in Supabase settings.");
+      }
+
+      // 4. Send profile data to your backend, including the now-guaranteed Supabase user ID
       const response = await api.post('/auth/signup/candidate', {
-        email: authData.user.email,
+        email: authUser.email,
         password: password,
-        token: authData.session?.access_token,
-        provider: authData.user?.app_metadata?.provider || 'email'
+        confirmPassword: confirmPassword,
+        userId: authUser.id,
+        token: authSession?.access_token,
+        provider: authUser.app_metadata?.provider || 'email'
       });
+
       return response.data;
     } catch (error) {
       console.error('Candidate signup error:', error.message);
@@ -135,7 +172,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signupRecruiter = async (email, password, companyDetails, socialToken, socialProvider) => {
+  // Recruiter signup function
+  const signupRecruiter = async (email, password, confirmPassword, companyDetails, socialToken, socialProvider) => {
     try {
       let authUser = null;
       let authSession = null;
@@ -147,10 +185,29 @@ export const AuthProvider = ({ children }) => {
         authUser = session.user;
         authSession = session;
       } else if (email && password) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        authUser = data.user;
-        authSession = data.session;
+        // 1. Sign up user with Supabase Auth
+        const { error: signUpError } = await supabase.auth.signUp({ email, password });
+        if (signUpError) throw signUpError;
+
+        // 2. Explicitly sign in the user to get a valid session and user object
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          console.warn('Explicit sign-in after recruiter signup failed:', signInError.message);
+          throw signInError;
+        }
+
+        // 3. Get the stable session and user ID from storage by waiting
+        authUser = await waitForUserId(); // CHANGED: Use waitForUserId
+        const { data: { session: currentSession } } = await supabase.auth.getSession(); // Get session after user is stable
+        authSession = currentSession;
+
+        console.log('Supabase signUp+signIn (Recruiter) authUser (after wait):', authUser);
+        console.log('Supabase signUp+signIn (Recruiter) authUser?.id (after wait):', authUser?.id);
+
+        // CRITICAL CHECK: Ensure user data is present and valid UUID before proceeding
+        if (!authUser || !authUser.id || typeof authUser.id !== 'string' || authUser.id.length !== 36) {
+          throw new Error("User data not available or invalid UUID after signup/signin/wait. Please ensure 'Confirm email' is OFF in Supabase settings.");
+        }
       } else {
         throw new Error("Invalid signup details. Provide email/password or social token/provider.");
       }
@@ -162,13 +219,16 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/auth/signup/recruiter', {
         email: authUser.email,
         password: password,
+        confirmPassword: confirmPassword,
+        userId: authUser.id,
         companyName: companyDetails.name,
         companyWebsite: companyDetails.website,
         companyDescription: companyDetails.description,
         companyLogoUrl: companyDetails.logo_url,
-        token: authSession?.access_token || socialToken,
-        provider: authUser.app_metadata.provider || socialProvider
+        token: authSession?.access_token,
+        provider: authUser.app_metadata?.provider || socialProvider
       });
+
       return response.data;
     } catch (error) {
       console.error('Recruiter signup error:', error.message);
