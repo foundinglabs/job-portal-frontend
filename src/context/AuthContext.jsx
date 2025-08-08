@@ -14,10 +14,12 @@ export const AuthProvider = ({ children }) => {
 
   const navigate = useNavigate();
 
+  // Effect to set the token getter for Axios API calls
   useEffect(() => {
     setAuthTokenGetter(() => token);
   }, [token]);
 
+  // Effect to handle Supabase authentication state changes and user redirection
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -125,37 +127,28 @@ export const AuthProvider = ({ children }) => {
       }
       await new Promise(resolve => setTimeout(resolve, delay));
     }
-    return null; // User ID not found after retries
+    return null;
   };
-
 
   // Candidate signup function
   const signupCandidate = async (email, password, confirmPassword) => {
     try {
-      // 1. Sign up user with Supabase Auth
       const { error: signUpError } = await supabase.auth.signUp({ email, password });
       if (signUpError) throw signUpError;
 
-      // 2. Explicitly sign in the user to get a valid session and user object
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
         console.warn('Explicit sign-in after candidate signup failed:', signInError.message);
         throw signInError;
       }
       
-      // 3. Get the stable session and user ID from storage by waiting
-      const authUser = await waitForUserId(); // CHANGED: Use waitForUserId
-      const { data: { session: authSession } } = await supabase.auth.getSession(); // Get session after user is stable
+      const authUser = await waitForUserId();
+      const { data: { session: authSession } } = await supabase.auth.getSession();
 
-      console.log('Supabase signUp+signIn (Candidate) authUser (after wait):', authUser);
-      console.log('Supabase signUp+signIn (Candidate) authUser?.id (after wait):', authUser?.id);
-
-      // CRITICAL CHECK: Ensure user data is present and valid UUID before proceeding
       if (!authUser || !authUser.id || typeof authUser.id !== 'string' || authUser.id.length !== 36) {
         throw new Error("User data not available or invalid UUID after signup/signin/wait. Please ensure 'Confirm email' is OFF in Supabase settings.");
       }
 
-      // 4. Send profile data to your backend, including the now-guaranteed Supabase user ID
       const response = await api.post('/auth/signup/candidate', {
         email: authUser.email,
         password: password,
@@ -185,26 +178,19 @@ export const AuthProvider = ({ children }) => {
         authUser = session.user;
         authSession = session;
       } else if (email && password) {
-        // 1. Sign up user with Supabase Auth
         const { error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) throw signUpError;
 
-        // 2. Explicitly sign in the user to get a valid session and user object
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) {
           console.warn('Explicit sign-in after recruiter signup failed:', signInError.message);
           throw signInError;
         }
 
-        // 3. Get the stable session and user ID from storage by waiting
-        authUser = await waitForUserId(); // CHANGED: Use waitForUserId
-        const { data: { session: currentSession } } = await supabase.auth.getSession(); // Get session after user is stable
+        authUser = await waitForUserId();
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         authSession = currentSession;
-
-        console.log('Supabase signUp+signIn (Recruiter) authUser (after wait):', authUser);
-        console.log('Supabase signUp+signIn (Recruiter) authUser?.id (after wait):', authUser?.id);
-
-        // CRITICAL CHECK: Ensure user data is present and valid UUID before proceeding
+        
         if (!authUser || !authUser.id || typeof authUser.id !== 'string' || authUser.id.length !== 36) {
           throw new Error("User data not available or invalid UUID after signup/signin/wait. Please ensure 'Confirm email' is OFF in Supabase settings.");
         }
