@@ -39,11 +39,11 @@ const ManageApplicationsPage = () => {
         setJobTitle(jobResponse.data.title);
 
         const appResponse = await api.get(`/applications/job/${jobId}`);
-        // Ensure match_percentage is a number
+        // Ensure match_percentage is a number
         setApplications(appResponse.data.map(app => ({
-            ...app,
-            match_percentage: app.match_percentage !== null ? Number(app.match_percentage) : null
-        })));
+            ...app,
+            match_percentage: app.match_percentage !== null ? Number(app.match_percentage) : null
+        })));
       } catch (err) {
         console.error('Error fetching applications:', err);
         setError(err.response?.data?.message || 'Failed to load applications for this job.');
@@ -67,7 +67,7 @@ const ManageApplicationsPage = () => {
     setError(null);
     try {
       const response = await api.patch(`/applications/${applicationId}/status`, {
-        status: newStatus,
+        application_status: newStatus, // CRITICAL: Corrected field name
       });
       setApplications(prev => prev.map(app =>
         app.id === applicationId ? { ...app, application_status: response.data.application_status } : app
