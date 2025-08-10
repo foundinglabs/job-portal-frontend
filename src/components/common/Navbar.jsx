@@ -16,7 +16,7 @@ const Navbar = () => {
     <nav className="bg-white dark:bg-dark-card shadow-md py-4 px-6 flex items-center justify-between rounded-b-xl font-inter">
       <div className="flex items-center space-x-4">
         <Link to="/" className="text-2xl font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 transition-colors">
-          Job Portal
+          FoundingLabs.ai
         </Link>
         <Link to="/jobs" className="px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
           Jobs
