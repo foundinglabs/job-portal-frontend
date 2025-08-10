@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: 'https://job-portal-frontend-iota-eight.vercel.app',
         },
       });
       if (error) throw error;
