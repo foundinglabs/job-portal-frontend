@@ -107,7 +107,6 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          
           redirectTo: 'https://job-portal-frontend-iota-eight.vercel.app', 
         },
       });
@@ -117,7 +116,7 @@ export const AuthProvider = ({ children }) => {
       console.error(`Social login (${provider}) error:`, error.message);
       throw error;
     }
-};
+  };
 
   // Helper function to wait for user ID to be available in session
   const waitForUserId = async (retries = 10, delay = 200) => {
