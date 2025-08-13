@@ -9,11 +9,12 @@ const CandidateDashboard = () => {
   const { user, isAuthenticated, loading: authLoading, role } = useAuth();
   const navigate = useNavigate();
   const [savedJobs, setSavedJobs] = useState([]);
+  const [appliedJobs, setAppliedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchSavedJobs = async () => {
+    const fetchDashboardData = async () => {
       if (!isAuthenticated || !user?.id || role !== 'candidate') {
         setLoading(false);
         if (isAuthenticated && role !== 'candidate') {
@@ -28,19 +29,22 @@ const CandidateDashboard = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await api.get('/saved-jobs');
-        // CORRECTED: Access the 'data' property of the response
-        setSavedJobs(response.data.data);
+        const [savedJobsResponse, appliedJobsResponse] = await Promise.all([
+          api.get('/saved-jobs'),
+          api.get('/candidate/applied-jobs')
+        ]);
+        setSavedJobs(savedJobsResponse.data.data);
+        setAppliedJobs(appliedJobsResponse.data.data);
       } catch (err) {
-        console.error('Error fetching saved jobs:', err);
-        setError(err.response?.data?.message || 'Failed to load saved jobs.');
+        console.error('Error fetching dashboard data:', err);
+        setError(err.response?.data?.message || 'Failed to load dashboard data.');
       } finally {
         setLoading(false);
       }
     };
 
     if (!authLoading) {
-      fetchSavedJobs();
+      fetchDashboardData();
     }
   }, [isAuthenticated, user, authLoading, role, navigate]);
 
@@ -102,19 +106,16 @@ const CandidateDashboard = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {savedJobs.map((job) => (
-              // Added check to ensure job object exists before rendering
               job.job && (
                 <div key={job.job_id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm flex justify-between items-center">
                   <div>
                     <Link
-                      // CORRECTED: Link now points to the correct job detail page
                       to={`/jobs/${job.job_id}`}
                       className="text-lg font-semibold text-primary-600 dark:text-primary-400 hover:underline"
                     >
                       {job.job.title}
                     </Link>
                     <p className="text-gray-600 dark:text-gray-400 text-sm">{job.job.company_name}</p>
-                    {/* CORRECTED: Displaying saved date from saved_jobs entry */}
                     <p className="text-gray-500 dark:text-gray-500 text-xs">Saved: {new Date(job.created_at).toLocaleDateString()}</p>
                   </div>
                   <button
@@ -132,9 +133,31 @@ const CandidateDashboard = () => {
 
       <div className="card-container">
         <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Your Applied Jobs</h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          Tracking your applied jobs is a future feature! For now, you can apply directly through job listings.
-        </p>
+        {appliedJobs.length === 0 ? (
+          <p className="text-gray-600 dark:text-gray-400">You haven't applied for any jobs yet.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {appliedJobs.map((job) => (
+              job.job && (
+                <div key={job.job_id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm flex justify-between items-center">
+                  <div>
+                    <Link
+                      to={`/jobs/${job.job_id}`}
+                      className="text-lg font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+                    >
+                      {job.job.title}
+                    </Link>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">{job.job.company_name}</p>
+                    <p className="text-gray-500 dark:text-gray-500 text-xs">Applied: {new Date(job.applied_at).toLocaleDateString()}</p>
+                    <p className={`text-sm font-medium mt-1 ${job.application_status === 'Hired' ? 'text-accent-green-600' : job.application_status === 'Rejected' ? 'text-accent-red' : 'text-gray-500'}`}>
+                      Status: {job.application_status}
+                    </p>
+                  </div>
+                </div>
+              )
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
