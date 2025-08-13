@@ -17,11 +17,11 @@ const CandidateDashboard = () => {
       if (!isAuthenticated || !user?.id || role !== 'candidate') {
         setLoading(false);
         if (isAuthenticated && role !== 'candidate') {
-            setError("Access denied. Only candidates can view this dashboard.");
-            navigate('/jobs');
+          setError("Access denied. Only candidates can view this dashboard.");
+          navigate('/jobs');
         } else {
-            setError("Please log in as a candidate to view your dashboard.");
-            navigate('/jobs');
+          setError("Please log in as a candidate to view your dashboard.");
+          navigate('/jobs');
         }
         return;
       }
@@ -29,7 +29,8 @@ const CandidateDashboard = () => {
       setError(null);
       try {
         const response = await api.get('/saved-jobs');
-        setSavedJobs(response.data);
+        // CORRECTED: Access the 'data' property of the response
+        setSavedJobs(response.data.data);
       } catch (err) {
         console.error('Error fetching saved jobs:', err);
         setError(err.response?.data?.message || 'Failed to load saved jobs.');
@@ -67,12 +68,12 @@ const CandidateDashboard = () => {
 
   if (error && (!isAuthenticated || role !== 'candidate')) {
     return (
-        <div className="container mx-auto px-4 py-8">
-            <ErrorMessage message={error} />
-            <div className="text-center mt-4">
-                <Link to="/jobs" className="btn-primary">Browse Jobs</Link>
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <ErrorMessage message={error} />
+        <div className="text-center mt-4">
+          <Link to="/jobs" className="btn-primary">Browse Jobs</Link>
         </div>
+      </div>
     );
   }
 
@@ -101,24 +102,29 @@ const CandidateDashboard = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {savedJobs.map((job) => (
-              <div key={job.job_id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm flex justify-between items-center">
-                <div>
-                  <Link
-                    to={`/jobs/${job.job_id}`}
-                    className="text-lg font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+              // Added check to ensure job object exists before rendering
+              job.job && (
+                <div key={job.job_id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm flex justify-between items-center">
+                  <div>
+                    <Link
+                      // CORRECTED: Link now points to the correct job detail page
+                      to={`/jobs/${job.job_id}`}
+                      className="text-lg font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+                    >
+                      {job.job.title}
+                    </Link>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">{job.job.company_name}</p>
+                    {/* CORRECTED: Displaying saved date from saved_jobs entry */}
+                    <p className="text-gray-500 dark:text-gray-500 text-xs">Saved: {new Date(job.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <button
+                    onClick={() => handleUnsaveJob(job.job_id)}
+                    className="px-3 py-1 bg-accent-red text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
                   >
-                    {job.job_title}
-                  </Link>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">{job.company_name}</p>
-                  <p className="text-gray-500 dark:text-gray-500 text-xs">Saved: {new Date(job.saved_at).toLocaleDateString()}</p>
+                    Unsave
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleUnsaveJob(job.job_id)}
-                  className="px-3 py-1 bg-accent-red text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
-                >
-                  Unsave
-                </button>
-              </div>
+              )
             ))}
           </div>
         )}

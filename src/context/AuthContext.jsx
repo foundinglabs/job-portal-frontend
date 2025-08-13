@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: 'https://job-portal-frontend-iota-eight.vercel.app', 
+          redirectTo: 'https://job-portal-frontend-iota-eight.vercel.app/callback', 
         },
       });
       if (error) throw error;
@@ -224,8 +224,17 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Get the current session to check if a user is logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // If a session exists, perform the sign out.
+      if (session) {
+          const { error } = await supabase.auth.signOut();
+          if (error) throw error;
+      } else {
+          // If no session exists, log out is not needed.
+          console.log('No active session to sign out.');
+      }
     } catch (error) {
       console.error('Logout error:', error.message);
       throw error;

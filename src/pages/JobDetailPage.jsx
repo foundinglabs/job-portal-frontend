@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
-import { useAuth } from '../hooks/useAuth';
 
 const JobDetailPage = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, role, user, token } = useAuth(); // Destructure token from useAuth
+  const { isAuthenticated, role, user, loading: authLoading } = useAuth();
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,9 +16,8 @@ const JobDetailPage = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveError, setSaveError] = useState(null);
-  const [message, setMessage] = useState(null); // State for the message
-  const [messageType, setMessageType] = useState('error'); // 'error' or 'success'
-
+  const [message, setMessage] = useState(null);
+  const [messageType, setMessageType] = useState('error');
 
   const showMessage = (msg, type = 'error') => {
     setMessage(msg);
@@ -27,7 +26,6 @@ const JobDetailPage = () => {
       setMessage(null);
     }, 5000);
   };
-
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -56,10 +54,14 @@ const JobDetailPage = () => {
     const checkSavedStatus = async () => {
       if (isAuthenticated && role === 'candidate' && user?.id && job) {
         try {
-          const response = await api.get(`/saved-jobs/${job.id}/status`);
+          // CORRECTED: This now correctly calls GET /api/saved-jobs/check/:jobId
+          const response = await api.get(`/saved-jobs/check/${job.id}`);
           setIsSaved(response.data.isSaved);
         } catch (err) {
-          console.error('Error checking saved job status:', err);
+          // A 404 response here is expected if the job isn't saved, so we handle it gracefully
+          if (err.response?.status !== 404) {
+            console.error('Error checking saved job status:', err);
+          }
           setIsSaved(false);
         }
       } else {
@@ -72,14 +74,13 @@ const JobDetailPage = () => {
   }, [job, isAuthenticated, role, user, loading]);
 
   const handleApplyNow = () => {
-    // --- THIS IS THE KEY CHANGE ---
-    if (role === 'recruiter') {
-        showMessage('Error! Recruiters cannot apply for jobs.');
-        setTimeout(() => {
-            navigate('/jobs');
-        }, 1500); // Redirect after 1.5 seconds
-        return; // Stop the function here
-    }
+    if (role === 'recruiter') {
+        showMessage('Error! Recruiters cannot apply for jobs.');
+        setTimeout(() => {
+            navigate('/jobs');
+        }, 1500);
+        return;
+    }
 
     if (job?.application_mode === 'external' && job?.external_apply_link) {
       window.open(job.external_apply_link, '_blank');
@@ -98,8 +99,10 @@ const JobDetailPage = () => {
     setSaveLoading(true);
     setSaveError(null);
     try {
-      await api.post('/saved-jobs', { jobId: job.id });
+      // CORRECTED: This now correctly calls POST /api/saved-jobs
+      await api.post(`/saved-jobs`, { jobId: job.id });
       setIsSaved(true);
+      showMessage('Job saved successfully!', 'success');
     } catch (err) {
       console.error('Error saving job:', err);
       setSaveError(err.response?.data?.message || 'Failed to save job.');
@@ -116,8 +119,10 @@ const JobDetailPage = () => {
     setSaveLoading(true);
     setSaveError(null);
     try {
+      // CORRECTED: This now correctly calls DELETE /api/saved-jobs/:jobId
       await api.delete(`/saved-jobs/${job.id}`);
       setIsSaved(false);
+      showMessage('Job unsaved successfully!', 'success');
     } catch (err) {
       console.error('Error unsaving job:', err);
       setSaveError(err.response?.data?.message || 'Failed to unsave job.');
@@ -126,7 +131,8 @@ const JobDetailPage = () => {
     }
   };
 
-  if (loading) {
+
+  if (authLoading || loading) {
     return <div className="flex justify-center items-center h-96"><LoadingSpinner size="lg" /></div>;
   }
 
@@ -134,18 +140,13 @@ const JobDetailPage = () => {
     return <div className="container mx-auto px-4 py-8"><ErrorMessage message={error} /></div>;
   }
 
-  if (!job) {
-    return <div className="container mx-auto px-4 py-8 text-center text-gray-600 dark:text-gray-300 text-lg">Job not found.</div>;
-  }
-
   return (
     <div className="container mx-auto px-4 py-8 font-inter">
-      {/* Conditionally render the message */}
-      {message && (
-        <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50 ${messageType === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>
-          {message}
-        </div>
-      )}
+      {message && (
+        <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50 ${messageType === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>
+          {message}
+        </div>
+      )}
       <div className="card-container p-8">
         <h2 className="text-4xl font-bold text-primary-700 dark:text-primary-400 mb-4">{job.title}</h2>
 
@@ -165,8 +166,8 @@ const JobDetailPage = () => {
 
         <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">Required Skills</h3>
         <div className="flex flex-wrap gap-2 mb-8">
-          {job.skills_required && job.skills_required.map(skill => (
-            <span key={skill} className="bg-gray-100 text-gray-700 text-sm font-medium px-3 py-1 rounded-md dark:bg-gray-700 dark:text-gray-300">
+          {job.skills_required && job.skills_required.map((skill, index) => (
+            <span key={index} className="bg-gray-100 text-gray-700 text-sm font-medium px-3 py-1 rounded-md dark:bg-gray-700 dark:text-gray-300">
               {skill}
             </span>
           ))}
