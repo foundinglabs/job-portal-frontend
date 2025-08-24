@@ -67,7 +67,11 @@ const CandidateDashboard = () => {
   };
 
   if (authLoading || loading) {
-    return <div className="flex justify-center items-center h-96"><LoadingSpinner size="lg" /></div>;
+    return (
+      <div className="flex justify-center items-center h-96">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
   }
 
   if (error && (!isAuthenticated || role !== 'candidate')) {
@@ -75,52 +79,59 @@ const CandidateDashboard = () => {
       <div className="container mx-auto px-4 py-8">
         <ErrorMessage message={error} />
         <div className="text-center mt-4">
-          <Link to="/jobs" className="btn-primary">Browse Jobs</Link>
+          <Link to="/jobs" className="px-5 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition">
+            Browse Jobs
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 font-inter">
-      <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8 text-center">
-        Welcome, {user?.email || 'Candidate'}!
+    <div className="max-w-5xl mx-auto px-6 py-10 font-inter">
+      {/* Welcome */}
+      <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">
+        Welcome, <span className="text-blue-600">{user?.email || 'Candidate'}</span>!
       </h2>
 
-      <div className="card-container mb-8">
-        <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Your Profile</h3>
-        <p className="text-gray-700 dark:text-gray-300 mb-2">Email: {user?.email}</p>
-        <p className="text-gray-700 dark:text-gray-300 mb-4">User ID: {user?.id}</p>
+      {/* Profile Section */}
+      <div className="bg-white rounded-2xl shadow p-6 mb-10 border border-gray-200">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">Your Profile</h3>
+        <p className="text-gray-700 mb-2"><strong>Email:</strong> {user?.email}</p>
+        <p className="text-gray-700 mb-4"><strong>User ID:</strong> {user?.id}</p>
         <button
           onClick={() => alert("Profile editing functionality coming soon!")}
-          className="btn-secondary px-4 py-2"
+          className="px-5 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition"
         >
           Edit Profile
         </button>
       </div>
 
-      <div className="card-container mb-8">
-        <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Your Saved Jobs</h3>
+      {/* Saved Jobs */}
+      <div className="bg-white rounded-2xl shadow p-6 mb-10 border border-gray-200">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6">Your Saved Jobs</h3>
         {savedJobs.length === 0 ? (
-          <p className="text-gray-600 dark:text-gray-400">You haven't saved any jobs yet. <Link to="/jobs" className="text-primary-600 hover:underline">Browse jobs</Link> to find some!</p>
+          <p className="text-gray-600">
+            You haven't saved any jobs yet. <Link to="/jobs" className="text-blue-600 hover:underline">Browse jobs</Link> to find some!
+          </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {savedJobs.map((job) => (
               job.job && (
-                <div key={job.job_id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm flex justify-between items-center">
+                <div key={job.job_id} className="bg-gray-50 p-5 rounded-xl shadow-sm border flex flex-col justify-between">
                   <div>
                     <Link
                       to={`/jobs/${job.job_id}`}
-                      className="text-lg font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+                      className="text-lg font-semibold text-blue-600 hover:underline"
                     >
                       {job.job.title}
                     </Link>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">{job.job.company_name}</p>
-                    <p className="text-gray-500 dark:text-gray-500 text-xs">Saved: {new Date(job.created_at).toLocaleDateString()}</p>
+                    <p className="text-gray-600">{job.job.company_name}</p>
+                    <p className="text-gray-500 text-sm">Saved: {new Date(job.created_at).toLocaleDateString()}</p>
                   </div>
                   <button
                     onClick={() => handleUnsaveJob(job.job_id)}
-                    className="px-3 py-1 bg-accent-red text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                    className="mt-3 px-4 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm self-start"
                   >
                     Unsave
                   </button>
@@ -131,28 +142,32 @@ const CandidateDashboard = () => {
         )}
       </div>
 
-      <div className="card-container">
-        <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Your Applied Jobs</h3>
+      {/* Applied Jobs */}
+      <div className="bg-white rounded-2xl shadow p-6 border border-gray-200">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6">Your Applied Jobs</h3>
         {appliedJobs.length === 0 ? (
-          <p className="text-gray-600 dark:text-gray-400">You haven't applied for any jobs yet.</p>
+          <p className="text-gray-600">You haven't applied for any jobs yet.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {appliedJobs.map((job) => (
               job.job && (
-                <div key={job.job_id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm flex justify-between items-center">
-                  <div>
-                    <Link
-                      to={`/jobs/${job.job_id}`}
-                      className="text-lg font-semibold text-primary-600 dark:text-primary-400 hover:underline"
-                    >
-                      {job.job.title}
-                    </Link>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">{job.job.company_name}</p>
-                    <p className="text-gray-500 dark:text-gray-500 text-xs">Applied: {new Date(job.applied_at).toLocaleDateString()}</p>
-                    <p className={`text-sm font-medium mt-1 ${job.application_status === 'Hired' ? 'text-accent-green-600' : job.application_status === 'Rejected' ? 'text-accent-red' : 'text-gray-500'}`}>
-                      Status: {job.application_status}
-                    </p>
-                  </div>
+                <div key={job.job_id} className="bg-gray-50 p-5 rounded-xl shadow-sm border">
+                  <Link
+                    to={`/jobs/${job.job_id}`}
+                    className="text-lg font-semibold text-blue-600 hover:underline"
+                  >
+                    {job.job.title}
+                  </Link>
+                  <p className="text-gray-600">{job.job.company_name}</p>
+                  <p className="text-gray-500 text-sm">Applied: {new Date(job.applied_at).toLocaleDateString()}</p>
+                  
+                  {/* Status Badge */}
+                  <span className={`inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full 
+                    ${job.application_status === 'Hired' ? 'bg-green-100 text-green-700' : 
+                      job.application_status === 'Rejected' ? 'bg-red-100 text-red-600' : 
+                      'bg-gray-100 text-gray-600'}`}>
+                    {job.application_status}
+                  </span>
                 </div>
               )
             ))}
