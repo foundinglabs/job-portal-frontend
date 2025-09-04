@@ -1,4 +1,3 @@
-// RecruiterDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
@@ -16,17 +15,21 @@ import {
   Edit3,
   Trash2,
   Users,
+  LinkIcon,
 } from "lucide-react";
 
 const RecruiterDashboard = () => {
   const { user, isAuthenticated, role, companyId, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [jobsPosted, setJobsPosted] = useState([]);
+  const [recruiterName, setRecruiterName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchJobsPostedByCompany = async () => {
+    const fetchDashboardData = async () => {
       if (!isAuthenticated || role !== "recruiter" || !companyId) {
         setLoading(false);
         if (isAuthenticated && role !== "recruiter") {
@@ -46,18 +49,26 @@ const RecruiterDashboard = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await api.get(`/jobs/recruiter/dashboard`);
-        setJobsPosted(response.data);
+        const [jobsResponse, profileResponse] = await Promise.all([
+          api.get(`/jobs/recruiter/dashboard`),
+          api.get(`/recruiter/profile`)
+        ]);
+        setJobsPosted(jobsResponse.data);
+        if (profileResponse.data) {
+          setRecruiterName(profileResponse.data.recruiter_name);
+          setCompanyName(profileResponse.data.company_name);
+          setCompanyWebsite(profileResponse.data.company_website);
+        }
       } catch (err) {
         console.error("Error fetching jobs posted by company:", err);
-        setError(err.response?.data?.message || "Failed to load jobs posted by your company.");
+        setError(err.response?.data?.message || "Failed to load dashboard data.");
       } finally {
         setLoading(false);
       }
     };
 
     if (!authLoading) {
-      fetchJobsPostedByCompany();
+      fetchDashboardData();
     }
   }, [isAuthenticated, role, companyId, authLoading, navigate]);
 
@@ -111,7 +122,7 @@ const RecruiterDashboard = () => {
     <div className="max-w-5xl mx-auto px-6 py-12 font-inter">
       {/* Title */}
       <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-10 text-center">
-        Hello! {user?.email}
+        Hello! {recruiterName || user?.email}
       </h2>
 
       {/* Company Info */}
@@ -119,19 +130,23 @@ const RecruiterDashboard = () => {
         <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
           <Building2 className="w-6 h-6 text-primary-600" /> Company Overview
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-gray-700 dark:text-gray-300">
-          <div className="flex items-center gap-3">
-            <Mail className="w-5 h-5 text-primary-500" />
-            <span>{user?.email}</span>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 text-gray-700 dark:text-gray-300">
+          
           <div className="flex items-center gap-3">
             <User className="w-5 h-5 text-primary-500" />
-            <span>User ID: {user?.id}</span>
+            <span>{recruiterName || "User ID: " + user?.id}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <Building2 class="w-5 h-5 text-primary-500" />
+            <span>Company: {companyName || "N/A"}</span>
           </div>
           <div className="flex items-center gap-3">
-            <Briefcase className="w-5 h-5 text-primary-500" />
-            <span>Company ID: {companyId || "N/A"}</span>
-          </div>
+            <Link to={companyWebsite} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                <LinkIcon className="w-5 h-5 text-primary-500" />
+                <span>Website: {companyWebsite || "N/A"}</span>
+            </Link>
+        </div>
+
         </div>
       </div>
 
