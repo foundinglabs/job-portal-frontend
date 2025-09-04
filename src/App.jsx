@@ -26,7 +26,7 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="bg-white dark:bg-linkedin-black flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-grow">
         <Routes>
