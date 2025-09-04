@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, CalendarDays, Briefcase, TrendingUp, DollarSign } from "lucide-react";
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { MapPin, CalendarDays, Briefcase, TrendingUp, Link as LinkIcon, IndianRupee } from "lucide-react";
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -118,6 +118,13 @@ const JobDetailPage = () => {
     }
   };
 
+  const formatDescription = (text) => {
+    if (!text) return null;
+    return text.split('\n').map((line, index) => (
+      <p key={index} className="mb-2">{line}</p>
+    ));
+  };
+
   if (authLoading || loading) return <div className="flex justify-center items-center h-96"><LoadingSpinner size="lg" /></div>;
   if (error) return <div className="container mx-auto px-4 py-8"><ErrorMessage message={error} /></div>;
 
@@ -136,25 +143,31 @@ const JobDetailPage = () => {
         <div className="flex flex-wrap gap-6 mb-6 justify-center text-sm text-gray-600 dark:text-gray-400">
           <div className="flex items-center"><MapPin className="w-4 h-4 mr-2 text-red-600" /> {job.location}</div>
           <div className="flex items-center"><Briefcase className="w-4 h-4 mr-2 text-blue-600" /> {job.job_type}</div>
-          <div className="flex items-center"><TrendingUp className="w-4 h-4 mr-2 text-green-600" /> {job.experience_level}</div>
+          <div className="flex items-center"><TrendingUp className="w-4 h-4 mr-2 text-green-600" /> Experience: {job.experience_level}</div>
           {job.salary_range_min && (
-            <div className="flex items-center"><DollarSign className="w-4 h-4 mr-2 text-yellow-600" /> ${job.salary_range_min} - ${job.salary_range_max}</div>
+            <div className="flex items-center"><IndianRupee className="w-4 h-4 mr-2 text-yellow-600" /> Salary: ₹{job.salary_range_min} - ₹{job.salary_range_max}</div>
           )}
-          <div className="flex items-center"><CalendarDays className="w-4 h-4 mr-2 text-gray-500" /> {new Date(job.created_at).toLocaleDateString()}</div>
+          <div className="flex items-center"><CalendarDays className="w-4 h-4 mr-2 text-gray-500" /> Posted at: {new Date(job.created_at).toLocaleDateString()}</div>
+          {/* Company website link with an icon */}
+          {job.company_website && (
+            <a href={job.company_website} target="_blank" rel="noopener noreferrer" className="flex items-center text-primary-600 dark:text-primary-400 hover:underline">
+              <LinkIcon className="w-4 h-4 mr-2 text-primary-500" /> {job.company_name}
+            </a>
+          )}
         </div>
 
         {/* Description */}
         <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">Job Description</h3>
         <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-          <p>{job.description}</p>
+          {formatDescription(job.description)}
         </div>
 
         {/* Skills */}
         <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">Required Skills</h3>
         <div className="flex flex-wrap gap-3 mb-10">
           {job.skills_required && job.skills_required.map((skill, index) => (
-            <span 
-              key={index} 
+            <span
+              key={index}
               className="px-4 py-1.5 text-sm font-medium rounded-full border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
             >
               {skill}
@@ -176,8 +189,8 @@ const JobDetailPage = () => {
             <button
               onClick={isSaved ? handleUnsaveJob : handleSaveJob}
               className={`px-10 py-3 rounded-lg text-lg font-semibold shadow-md transition-all
-                ${isSaved 
-                  ? 'bg-gray-500 hover:bg-gray-600 text-white' 
+                ${isSaved
+                  ? 'bg-gray-500 hover:bg-gray-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'}
               `}
               disabled={saveLoading}
