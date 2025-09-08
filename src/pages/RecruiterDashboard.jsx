@@ -77,13 +77,9 @@ const RecruiterDashboard = () => {
   };
 
   const handleDeleteJob = async (jobId) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this job? This will soft-delete it and it will no longer be visible to candidates."
-      )
-    )
+    if (!window.confirm("Are you sure you want to delete this job? This will soft-delete it and it will no longer be visible to candidates.")) {
       return;
-
+    }
     setLoading(true);
     setError(null);
     try {
@@ -99,7 +95,7 @@ const RecruiterDashboard = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="flex justify-center items-center h-screen">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -119,116 +115,124 @@ const RecruiterDashboard = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12 font-inter">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12 font-inter">
       {/* Title */}
-      <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-10 text-center">
-        Hello! {recruiterName || user?.email}
+      <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6 md:mb-10 text-center">
+        Hello! <span className="text-primary-600 break-words">{recruiterName || user?.email}</span> 🎉
       </h2>
 
-      {/* Company Info */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-10 border border-gray-200 dark:border-gray-700">
-        <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
-          <Building2 className="w-6 h-6 text-primary-600" /> Company Overview
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 text-gray-700 dark:text-gray-300">
-          
-          <div className="flex items-center gap-3">
-            <User className="w-5 h-5 text-primary-500" />
-            <span>{recruiterName || "User ID: " + user?.id}</span>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* Company Info */}
+        <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-6 lg:mb-0 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
+            <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" /> Company Overview
+          </h3>
+          <div className="space-y-4 text-gray-700 dark:text-gray-300">
+            <div className="flex items-center gap-3">
+              <User className="w-5 h-5 text-primary-500" />
+              <span className="break-words">Recruiter: {recruiterName || "N/A"}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Mail className="w-5 h-5 text-primary-500" />
+              <span className="break-words">Email: {user?.email}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Building2 className="w-5 h-5 text-primary-500" />
+              <span className="break-words">Company: {companyName || "N/A"}</span>
+            </div>
+            {companyWebsite && (
+              <div className="flex items-center gap-3">
+                <Link to={companyWebsite} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors break-words">
+                  <LinkIcon className="w-5 h-5 text-primary-500" />
+                  <span>Website: {companyWebsite || "N/A"}</span>
+                </Link>
+              </div>
+            )}
           </div>
-          <div class="flex items-center gap-3">
-            <Building2 class="w-5 h-5 text-primary-500" />
-            <span>Company: {companyName || "N/A"}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link to={companyWebsite} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                <LinkIcon className="w-5 h-5 text-primary-500" />
-                <span>Website: {companyWebsite || "N/A"}</span>
-            </Link>
         </div>
 
-        </div>
-      </div>
+        {/* Jobs Section */}
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
+            <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" /> Jobs You’ve Posted
+          </h3>
 
-      {/* Jobs Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 border border-gray-200 dark:border-gray-700">
-        <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
-          <Briefcase className="w-6 h-6 text-primary-600" /> Jobs You’ve Posted
-        </h3>
-
-        {jobsPosted.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Users className="w-16 h-16 text-gray-400 mb-4" />
-            <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
-              You haven’t posted any jobs yet.
-            </p>
-            <Link
-              to="/recruiter/post-job"
-              className="btn-primary px-6 py-3 text-base rounded-xl shadow-md"
-            >
-              Post Your First Job
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {jobsPosted.map((job) => (
-              <div
-                key={job.id}
-                className="bg-gray-50 dark:bg-gray-700 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition"
+          {jobsPosted.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center">
+              <Users className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mb-4" />
+              <p className="text-gray-600 dark:text-gray-400 text-base sm:text-lg mb-4">
+                You haven’t posted any jobs yet.
+              </p>
+              <Link
+                to="/recruiter/post-job"
+                className="btn-primary px-6 py-3 text-base rounded-xl shadow-md"
               >
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  {/* Job Details */}
-                  <div>
-                    <h4 className="text-xl font-bold text-primary-600 dark:text-primary-400">
-                      {job.title}
-                    </h4>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">
-                      {job.location} ({job.job_type})
-                    </p>
-                    <p className="flex items-center text-gray-500 text-xs mt-1">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      Posted: {new Date(job.created_at).toLocaleDateString()}
-                    </p>
-                    <p
-                      className={`flex items-center text-sm font-medium mt-2 ${
-                        job.is_active ? "text-green-600" : "text-red-500"
-                      }`}
-                    >
-                      {job.is_active ? (
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                      ) : (
-                        <XCircle className="w-4 h-4 mr-1" />
-                      )}
-                      {job.is_active ? "Active" : "Inactive (Deleted)"}
-                    </p>
-                  </div>
+                Post Your First Job
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4 sm:space-y-6">
+              {jobsPosted.map((job) => (
+                <div
+                  key={job.id}
+                  className="bg-gray-50 dark:bg-gray-700 p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition"
+                >
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    {/* Job Details */}
+                    <div className="flex-1">
+                      <h4 className="text-base sm:text-xl font-bold text-primary-600 dark:text-primary-400">
+                        {job.title}
+                      </h4>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm">
+                        {job.location} ({job.job_type})
+                      </p>
+                      <p className="flex items-center text-gray-500 text-xs mt-1">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        Posted: {new Date(job.created_at).toLocaleDateString()}
+                      </p>
+                      <p
+                        className={`flex items-center text-sm font-medium mt-2 ${
+                          job.is_active ? "text-green-600" : "text-red-500"
+                        }`}
+                      >
+                        {job.is_active ? (
+                          <CheckCircle2 className="w-4 h-4 mr-1" />
+                        ) : (
+                          <XCircle className="w-4 h-4 mr-1" />
+                        )}
+                        {job.is_active ? "Active" : "Inactive (Deleted)"}
+                      </p>
+                    </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button
-                      onClick={() => handleViewApplications(job.id)}
-                      className="btn-primary flex items-center gap-2 px-4 py-2 text-sm rounded-lg shadow-sm"
-                    >
-                      <Users className="w-4 h-4" /> View Applications
-                    </button>
-                    <Link
-                      to={`/recruiter/edit-job/${job.id}`}
-                      className="btn-secondary flex items-center gap-2 px-4 py-2 text-sm rounded-lg"
-                    >
-                      <Edit3 className="w-4 h-4" /> Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDeleteJob(job.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors shadow-sm"
-                    >
-                      <Trash2 className="w-4 h-4" /> Delete
-                    </button>
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0 w-full">
+                      <button
+                        onClick={() => handleViewApplications(job.id)}
+                        className="btn-primary flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs sm:text-sm rounded-lg shadow-sm"
+                      >
+                        <Users className="w-4 h-4" /> View Applications
+                      </button>
+                      <Link
+                        to={`/recruiter/edit-job/${job.id}`}
+                        className="btn-secondary flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs sm:text-sm rounded-lg"
+                      >
+                        <Edit3 className="w-4 h-4" /> Edit Job Description
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteJob(job.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors shadow-sm"
+                      >
+                        <Trash2 className="w-4 h-4" /> Delete
+                      </button>
+                    </div>
+
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
