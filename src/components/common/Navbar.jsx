@@ -9,8 +9,8 @@ const Navbar = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  
-  // Create a ref for the mobile menu container
+
+  // Create refs for the mobile menu and the menu button
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
@@ -58,161 +58,178 @@ const Navbar = () => {
     };
   }, [mobileMenuRef, menuButtonRef]);
 
-  return (
-    <nav className="bg-white dark:bg-linkedin-dark shadow-md py-4 px-6 md:px-8 flex flex-wrap items-center justify-between rounded-b-xl font-inter sticky top-0 z-50">
+  // Handle navigation link clicks
+  const handleLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  };
 
-      {/* Left Section - Logo and Jobs Button */}
-      <div className="flex items-center space-x-6 md:space-x-10 flex-shrink-0">
+  return (
+    <nav className="bg-white dark:bg-linkedin-dark shadow-md py-4 px-6 md:px-8 flex items-center justify-between rounded-b-xl font-inter sticky top-0 z-50">
+
+      {/* Left Section - Logo */}
+      <div className="flex items-center flex-shrink-0">
         <Link
           to="/"
           className="text-2xl font-extrabold tracking-tight text-blue-600 dark:text-blue-500"
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={handleLinkClick}
         >
           FoundingLabs.ai
         </Link>
-        <Link
-          to="/jobs"
-          className={`px-4 py-2 rounded-lg border transition-colors ${
-            location.pathname === '/jobs'
-              ? 'border-blue-600 text-blue-600 font-semibold shadow-sm dark:border-blue-500 dark:text-blue-500'
-              : 'border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-100 hover:border-blue-400 hover:text-blue-600'
-          }`}
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          Jobs
-        </Link>
       </div>
 
-      {/* Right Section - Auth and Actions (Hidden on mobile) */}
-      <div className="hidden md:flex items-center space-x-4">
-        <button
-          onClick={handleToggle}
-          className="p-2 rounded-full text-gray-600 hover:text-primary-600 dark:text-gray-100 dark:hover:text-primary-400 transition-colors duration-200"
-        >
-          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
-        {isAuthenticated ? (
-          <>
-            <span className="text-gray-700 dark:text-gray-100 text-sm hidden lg:block">
-              {user?.email}{' '}
-              <span className="text-blue-600 font-medium">({role})</span>
-            </span>
-            {role === 'candidate' && (
-              <Link
-                to="/candidate/dashboard"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-              >
-                Dashboard
-              </Link>
-            )}
-            {role === 'recruiter' && (
-              <>
+      {/* Right Section - Desktop Navigation and Mobile Menu Button */}
+      <div className="flex items-center space-x-4">
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center space-x-4">
+          <Link
+            to="/jobs"
+            className={`px-4 py-2 rounded-lg border transition-colors ${
+              location.pathname === '/jobs'
+                ? 'border-blue-600 text-blue-600 font-semibold shadow-sm dark:border-blue-500 dark:text-blue-500'
+                : 'border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-100 hover:border-blue-400 hover:text-blue-600'
+            }`}
+          >
+            Jobs
+          </Link>
+          <button
+            onClick={handleToggle}
+            className="p-2 rounded-full text-gray-600 hover:text-primary-600 dark:text-gray-100 dark:hover:text-primary-400 transition-colors duration-200"
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          {isAuthenticated ? (
+            <>
+              <span className="text-gray-700 dark:text-gray-100 text-sm hidden lg:block">
+                {user?.email}{' '}
+                <span className="text-blue-600 font-medium">({role})</span>
+              </span>
+              {role === 'candidate' && (
                 <Link
-                  to="/recruiter/dashboard"
+                  to="/candidate/dashboard"
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
                 >
                   Dashboard
                 </Link>
-                <Link
-                  to="/recruiter/post-job"
-                  className="bg-yellow-400 text-blue-900 px-4 py-2 rounded-lg shadow hover:bg-yellow-300 transition font-medium"
-                >
-                  Post Job
-                </Link>
-              </>
-            )}
+              )}
+              {role === 'recruiter' && (
+                <>
+                  <Link
+                    to="/recruiter/dashboard"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/recruiter/post-job"
+                    className="bg-yellow-400 text-blue-900 px-4 py-2 rounded-lg shadow hover:bg-yellow-300 transition font-medium"
+                  >
+                    Post Job
+                  </Link>
+                </>
+              )}
+              <button
+                onClick={handleLogout}
+                className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
             <button
-              onClick={handleLogout}
-              className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
+              onClick={() => setIsAuthModalOpen(true)}
+              className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
             >
-              Logout
+              Login / Sign Up
             </button>
-          </>
-        ) : (
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-          >
-            Login / Sign Up
-          </button>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* Mobile Menu Button (Visible on mobile) */}
-      <div className="md:hidden" ref={menuButtonRef}>
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-md text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-        >
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {/* Mobile Menu Button (Visible on mobile) */}
+        <div className="md:hidden" ref={menuButtonRef}>
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 rounded-md text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu (Toggled on mobile) */}
       <div
-        className={`md:hidden w-full flex-col mt-4 space-y-4 items-center justify-center transition-all duration-300 ease-in-out ${
-          isMobileMenuOpen ? 'flex' : 'hidden'
+        className={`md:hidden absolute top-full left-0 w-full bg-white dark:bg-linkedin-dark shadow-lg transition-all duration-300 ease-in-out ${
+          isMobileMenuOpen ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0 pointer-events-none'
         }`}
         ref={mobileMenuRef}
       >
-        <button
-          onClick={handleToggle}
-          className="p-2 w-full rounded-md text-gray-700 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700 transition flex items-center justify-center space-x-2"
-        >
-          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-          <span>Switch Theme</span>
-        </button>
-        {isAuthenticated ? (
-          <>
-            <span className="text-gray-700 dark:text-gray-100 text-sm">
-              {user?.email}{' '}
-              <span className="text-blue-600 font-medium">({role})</span>
-            </span>
-            {role === 'candidate' && (
-              <Link
-                to="/candidate/dashboard"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="w-full text-center bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-              >
-                Dashboard
-              </Link>
-            )}
-            {role === 'recruiter' && (
-              <>
+        <div className="flex flex-col items-center py-2 space-y-1 w-full px-6">
+          <Link
+            to="/jobs"
+            onClick={handleLinkClick}
+            className="w-full text-center py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-500 transition-colors duration-200 text-lg font-medium"
+          >
+            Jobs
+          </Link>
+          <hr className="w-1/4 border-gray-200 dark:border-gray-700" />
+          <button
+            onClick={handleToggle}
+            className="p-2 w-full rounded-md text-gray-700 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700 transition flex items-center justify-center space-x-2"
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            <span>Switch Theme</span>
+          </button>
+          {isAuthenticated ? (
+            <>
+              <span className="text-gray-700 dark:text-gray-100 text-sm py-2">
+                {user?.email}{' '}
+                <span className="text-blue-600 font-medium">({role})</span>
+              </span>
+              {role === 'candidate' && (
                 <Link
-                  to="/recruiter/dashboard"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  to="/candidate/dashboard"
+                  onClick={handleLinkClick}
                   className="w-full text-center bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
                 >
                   Dashboard
                 </Link>
-                <Link
-                  to="/recruiter/post-job"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full text-center bg-yellow-400 text-blue-900 px-4 py-2 rounded-lg shadow hover:bg-yellow-300 transition font-medium"
-                >
-                  Post Job
-                </Link>
-              </>
-            )}
+              )}
+              {role === 'recruiter' && (
+                <>
+                  <Link
+                    to="/recruiter/dashboard"
+                    onClick={handleLinkClick}
+                    className="w-full text-center bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/recruiter/post-job"
+                    onClick={handleLinkClick}
+                    className="w-full text-center bg-yellow-400 text-blue-900 px-4 py-2 rounded-lg shadow hover:bg-yellow-300 transition font-medium"
+                  >
+                    Post Job
+                  </Link>
+                </>
+              )}
+              <button
+                onClick={handleLogout}
+                className="w-full text-center border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
             <button
-              onClick={handleLogout}
-              className="w-full text-center border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
+              onClick={() => {
+                setIsAuthModalOpen(true);
+                handleLinkClick();
+              }}
+              className="w-full text-center bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
             >
-              Logout
+              Login / Sign Up
             </button>
-          </>
-        ) : (
-          <button
-            onClick={() => {
-              setIsAuthModalOpen(true);
-              setIsMobileMenuOpen(false);
-            }}
-            className="w-full text-center bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-          >
-            Login / Sign Up
-          </button>
-        )}
+          )}
+        </div>
       </div>
 
       <AuthModal
