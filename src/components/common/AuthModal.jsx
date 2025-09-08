@@ -257,14 +257,7 @@ const AuthModal = ({ isOpen, onClose }) => {
             <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google logo" className="mr-2" />
             {isLoginMode ? 'Continue with Google' : 'Sign Up with Google'}
           </button>
-          <button
-            onClick={() => handleSocialLogin('linkedin')}
-            className="btn-secondary w-full flex items-center justify-center bg-[#0A66C2] text-white hover:bg-[#004182] dark:bg-[#0A66C2] dark:hover:bg-[#004182]"
-            disabled={loading || authContextLoading}
-          >
-            <img src="https://img.icons8.com/color/24/000000/linkedin.png" alt="LinkedIn logo" className="mr-2" />
-            {isLoginMode ? 'Continue with LinkedIn' : 'Sign Up with LinkedIn'}
-          </button>
+          
         </div>
       </div> {/* End of scrollable container */}
     </Modal>
